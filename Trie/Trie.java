@@ -150,7 +150,7 @@ public class Trie
 	 * @param prefix The prefix with which all words start. Typically, the string required to reach the starting node.
 	 * @return The list of words following the node, or an empty list if none are found.
 	 */
-	private List<String> getAlphabeticalListFromNode(TrieNode node, String prefix)
+	private List<String> getWordsFromNode(TrieNode node, String prefix)
 	{
 		// create an empty list, which will be added to with each recursion.
 		List<String> words = new ArrayList<>();
