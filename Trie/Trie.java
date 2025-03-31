@@ -1,11 +1,9 @@
-import org.w3c.dom.Node;
-
+import java.io.*;
 import java.util.*;
 
 public class Trie
 {
-
-	private TrieNode root = new TrieNode();
+	private final TrieNode root = new TrieNode();
 
 	/**
 	 * Inserts a string into the trie and returns the last node that was
@@ -43,6 +41,12 @@ public class Trie
 				// add all remaining
 				currentNode.addChild(c);
 				currentNode = currentNode.getChild(c);
+			}
+
+			// ...
+			if (currentNode.maxFrequency < data.getFrequency())
+			{
+				currentNode.maxFrequency = data.getFrequency();
 			}
 		}
 
@@ -134,10 +138,11 @@ public class Trie
 	public List<String> getAlphabeticalListWithPrefix(String prefix)
 	{
 		// get a list of all words following the prefix
-		List<String> words = getAlphabeticalListFromNode(getNode(prefix), prefix);
+		List<String> words = getWordsFromNode(getNode(prefix), prefix);
 
 		//sort the list alphabetically
 		Collections.sort(words);
+		// because we are using Hashmaps to store child nodes, this can't be done during traversal
 
 		//return the list
 		return words;
@@ -168,7 +173,7 @@ public class Trie
 			for (char child : node.getChildren().keySet() )
 			{
 				// add any words found by the children to the list of words
-				words.addAll(getAlphabeticalListFromNode(node.getChild(child), prefix + child));
+				words.addAll(getWordsFromNode(node.getChild(child), prefix + child));
 				// `prefix: prefix + child` adds the key to the character to the current prefix, building the word one
 				//  letter at a time with each recursion.
 			}
@@ -189,7 +194,46 @@ public class Trie
 	 */
 	public String getMostFrequentWordWithPrefix(String prefix)
 	{
-		return prefix + "bogus";
+		TrieNode node = getNode(prefix);
+
+		// keep searching until the end of the chain, or the next node has a lower frequency than the current
+		while ((node != null) && (node.getNumChildren() > 0))
+		{
+			// store which child has the highest frequency
+			String childName = null;
+			// this is a string for two reasons:
+			//   1. it allows it to be null, for the purpose of checking if it has been modified later
+			//   2. to make it easier to change if we allow strings as child names later
+
+			// find the child with the highest frequency
+			for(char child : node.getChildren().keySet())
+			{
+				// ignore children with lower frequency than the current node
+				if (node.getChild(child).maxFrequency >= node.maxFrequency)
+				{
+					// store the child
+					childName = String.valueOf(child);
+				}
+			}
+
+			if (childName == null)
+			{
+				// if childName is still ' ' then there are no words further along the chain with a higher frequency
+				// so return immediately
+				return prefix;
+			}
+			else
+			{
+				// add the new suffix to the prefix
+				prefix = prefix + childName;
+
+				// set the current node to the child, then restart the loop
+				node = node.getChild(childName.charAt(0));
+			}
+		}
+		// theoretically, this implementation should find the most frequency word in O(n+1) time, where n is the length of the most frequent word
+
+		return prefix;
 	}
 
 	/**
@@ -201,6 +245,46 @@ public class Trie
 	 */
 	public static Trie readInDictionary(String fileName)
 	{
-		return null;
+		Trie trie = new Trie();
+		Scanner fileScanner;
+
+		try
+		{
+			// use a FileInputStream to ensure correct reading end-of-file
+			//fileScanner = new Scanner(new FileInputStream("data" + File.separator + fileName));
+			fileScanner = new Scanner(new FileInputStream(fileName));
+		}
+		catch (FileNotFoundException ex)
+		{
+			System.out.println(" could not find the file \"" + fileName + "\" in the data directory!");
+			return null;
+		}
+
+		int wordCount = 0;
+		long startTime = System.nanoTime();
+
+		while (fileScanner.hasNextLine())
+		{
+			String nextLine = fileScanner.nextLine();
+			// System.out.println("nextLine: " + nextLine); uncomment if you want to see what is read in
+			String[] splitLine = nextLine .split(" ");
+			int rank = Integer.parseInt(splitLine[0]);
+			String word = splitLine[1];
+			int freq = Integer.parseInt(splitLine[2]);
+
+			String other = "";
+			// add whatever else to the "other" field
+			for (int i = 3; i < splitLine.length; i++)
+			{
+				other = other + splitLine[i] + " ";
+			}
+			// not currently using it, but could later
+
+			trie.insert(word, new TrieData(freq, rank));
+			wordCount++;
+		}
+
+		System.out.println("Read in " + wordCount + " words in " + ((System.nanoTime() - startTime) / 1000000.0) + " ms.");
+		return trie;
 	}
 }

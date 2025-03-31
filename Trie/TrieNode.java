@@ -4,12 +4,20 @@ public class TrieNode
 {
 	private TrieData data = null;
 	private boolean terminal = false;
+
+	public int maxFrequency = -1;   // the highest frequency among nodes following this one
+	public int getNumChildren()
+	{
+		return numChildren;
+	}
+
 	private int numChildren = 0;
 
 
 	HashMap<Character, TrieNode> children = new HashMap<Character, TrieNode>(1, 0.75f);
 	// Using a HashMap because it has very fast access, the cost of slow creation and high space usage.
 	// the point of this is to search trees FAST, since if we're creating a Trie, we probably have the time to add stuff
+	// TODO calculate how often the map is getting rehashed
 
 	/**
 	 * Lookup a child node of the current node that is associated with a
@@ -72,7 +80,7 @@ public class TrieNode
 	}
 
 	/**
-	 * Add a new data object to the node.
+	 * Add a new data object to the node, replacing data already there.
 	 *
 	 * @param dataObject The data object to be added to the node.
 	 */
@@ -87,12 +95,12 @@ public class TrieNode
 	 * for example,
 	 * TrieNode; isTerminal=true, data=3, #children=1
 	 *
-	 * @return
+	 * @return A description of the node as a String.
 	 */
 	@Override
 	public String toString()
 	{
-		return "TrieNode; isTerminal=" + terminal + ", data="+ ((data == null) ? "null" : data.toString()) + ", #children=" + numChildren;
+		return "TrieNode; isTerminal=" + terminal + ", data=" + ((data == null) ? "null" : data.toString()) + ", #children=" + numChildren;
 	}
 }
 
