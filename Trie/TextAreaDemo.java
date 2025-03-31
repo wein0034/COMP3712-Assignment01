@@ -53,7 +53,7 @@ public class TextAreaDemo extends JFrame
 
     //    private final List<String> words;
     private Mode mode = Mode.INSERT;
-    private final String fileName = "data/word-freq.expanded.trim.txt";
+    private final String fileName = "Trie/data/word-freq.expanded.trim.txt";
     private Trie dictionaryTrie = null;
 
     public TextAreaDemo() {
