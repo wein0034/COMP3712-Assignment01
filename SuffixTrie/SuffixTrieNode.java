@@ -1,19 +1,24 @@
-public class SuffixTrieNode {
+public class SuffixTrieNode
+{
 
-    SuffixTrieData data = null;
-    int numChildren = 0;
+	SuffixTrieData data = null;
+	int numChildren = 0;
 
-    public SuffixTrieNode getChild(char label) {
-        return null;
-    }
+	public SuffixTrieNode getChild(char label)
+	{
+		return null;
+	}
 
-    public void addChild(char label, SuffixTrieNode node) {
-    }
+	public void addChild(char label, SuffixTrieNode node)
+	{
+	}
 
-    public void addData(int sentencePos, int characterPos) {
-    }
+	public void addData(int sentencePos, int characterPos)
+	{
+	}
 
-    public String toString() {
-        return data.toString();
-    }
+	public String toString()
+	{
+		return data.toString();
+	}
 }
