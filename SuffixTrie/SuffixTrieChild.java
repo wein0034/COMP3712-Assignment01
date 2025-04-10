@@ -9,8 +9,8 @@ public class SuffixTrieChild
 		this.value = child;
 	}
 
-	private String label = "";
-	private SuffixTrieNode value = null;
+	private final String label;
+	private final SuffixTrieNode value;
 
 	public SuffixTrieNode Value()
 	{

@@ -1,17 +1,16 @@
 import java.io.*;
-import java.util.Objects;
 import java.util.Scanner;
 
 public class SuffixTrie
 {
 
-	private SuffixTrieNode root = new SuffixTrieNode(-1, -1);
+	private final SuffixTrieNode root = new SuffixTrieNode(-1, -1);
 
 	/**
 	 * Insert a String into the suffix trie.  For the assignment the string str
 	 * is a sentence from the given text file.
 	 *
-	 * @param input The sentence to insert.
+	 * @param input       The sentence to insert.
 	 * @param sentencePos The starting index/position of the sentence.
 	 */
 	public void insert(String input, int sentencePos)
@@ -170,7 +169,7 @@ public class SuffixTrie
 	{
 		SuffixTrie trie = new SuffixTrie();
 
-		Scanner scanner = null;
+		Scanner scanner;
 		try
 		{
 			// use a FileInputStream to ensure correct reading end-of-file
@@ -183,7 +182,7 @@ public class SuffixTrie
 			return null;
 		}
 
-		int sentanceCounter = 0;
+		int sentenceCounter = 0;
 		int wordCounter = 0;
 
 		long startTime = System.nanoTime();
@@ -206,21 +205,21 @@ public class SuffixTrie
 			}
 			//System.out.println("Reading: " + sentence); // uncomment if you want to see what is read in
 
-			trie.insert(String.valueOf(sentence), sentanceCounter);
+			trie.insert(String.valueOf(sentence), sentenceCounter);
 
-//			// Split all the words in the sentence into an array (deliminate with ' ')
+//			// Split all the words in the sentence into an array (deliminate with " ")
 //			String[] words = sentence.toString().split(" ");
 //
 //			// Add each word to the trie
 //			for (String word : words)
 //			{
-//				trie.insert(word, sentanceCounter);
+//				trie.insert(word, sentenceCounter);
 //				wordCounter++;
 //			}
-			sentanceCounter++;
+			sentenceCounter++;
 		}
 
-		System.out.println("Read in " + sentanceCounter + " sentences containing " + wordCounter + " words in " + ((System.nanoTime() - startTime) / 1000000.0) + " ms.");
+		System.out.println("Read in " + sentenceCounter + " sentences containing " + wordCounter + " words in " + ((System.nanoTime() - startTime) / 1000000.0) + " ms.");
 		return trie;
 	}
 

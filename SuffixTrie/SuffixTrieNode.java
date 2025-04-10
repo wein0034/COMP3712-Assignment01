@@ -23,16 +23,18 @@ public class SuffixTrieNode
 	}
 
 	boolean terminal = false;
+
 	public boolean isTerminal()
 	{
 		return terminal;
 	}
+
 	public void setTerminal(boolean terminal)
 	{
 		this.terminal = terminal;
 	}
 
-	HashMap<String, SuffixTrieNode> children = new HashMap<String, SuffixTrieNode>(1, 0.75f);
+	HashMap<String, SuffixTrieNode> children = new HashMap<>(1, 0.75f);
 	// Using a HashMap because it has very fast access, the cost of slow creation and high space usage.
 	// the point of this is to search trees FAST, since if we're creating a Trie, we probably have the time to add stuff
 	// TODO calculate how often the map is getting rehashed

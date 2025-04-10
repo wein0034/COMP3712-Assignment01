@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class SuffixTrieData
 {
-	private ArrayList<SuffixIndex> startIndexes = null;
+	private ArrayList<SuffixIndex> startIndexes;
 
 	public SuffixTrieData()
 	{
