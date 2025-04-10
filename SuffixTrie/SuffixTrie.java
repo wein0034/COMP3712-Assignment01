@@ -1,100 +1,159 @@
 import java.io.*;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class SuffixTrie
 {
 
-	private SuffixTrieNode root = new SuffixTrieNode(-1,-1);
+	private SuffixTrieNode root = new SuffixTrieNode(-1, -1);
 
 	/**
 	 * Insert a String into the suffix trie.  For the assignment the string str
 	 * is a sentence from the given text file.
 	 *
-	 * @param str           the sentence to insert.
-	 * @param startPosition the starting index/position of the sentence.
+	 * @param input The sentence to insert.
+	 * @param sentencePos The starting index/position of the sentence.
 	 */
-	public void insert(String str, int startPosition)
+	public void insert(String input, int sentencePos)
 	{
-		// ensure pattern is case insensitive
-		str = str.toLowerCase();
+		// ensure pattern is case-insensitive and has no leading or trailing whitespace
+		input = CleanString(input);
 
-		for (int startFrom = 0; startFrom < str.length(); startFrom++)
+		// repeat the insert process n times, where n is the length of the input, starting from one position further along each time
+		for (int startFrom = 0; startFrom < input.length(); startFrom++)
 		{
-			String substr = str.substring(startFrom);
+			String inputRemaining = input.substring(startFrom);
+			SuffixTrieChild currentNode = new SuffixTrieChild("", root);
 
-			char[] chars = substr.toCharArray();
-			SuffixTrieNode currentNode = root;
+			// check if there is a node to use
+			SuffixTrieChild newNode = currentNode.Value().getChild(inputRemaining);
 
-			boolean add = false;
-			for (int i = 0;i < chars.length; i++)
+			// if there isn't, add the rest of the string as a single node, including its data
+			if (newNode == null)
 			{
-				if (!add)
-				{
-					if (currentNode.getChild(chars[i]) != null)
-					{
-						// search through the tree as long as the current string already exists
-						currentNode = currentNode.getChild(chars[i]);
-
-						// add the data for the new string to the current node
-						currentNode.addData(startPosition, startFrom + i);
-
-						// restart the loop early to avoid adding anything below
-						continue;
-					}
-					else
-					{
-						// when a missing char is found, switch add to true so it skips searching,
-						// then move on to add the new char below
-						add = true;
-					}
-				}
-
-				// add the current char, including its data
-				currentNode.addChild(chars[i], startPosition, startFrom + i);
-
-				// move to node that matches the char we want to add
-				currentNode = currentNode.getChild(chars[i]);
-
-				//continue adding the rest of the string
+				currentNode.Value().addChild(inputRemaining, sentencePos, startFrom);
 			}
+			// if there is, find how much of it matches
+			else
+			{
+				int nodePos = 0;
+				SuffixTrieNode previousNode = currentNode.Value();
+				for (int addPos = 0; addPos < inputRemaining.length(); addPos++)
+				{
+					// if the current node has been full searched, try and find a continuation in a child node
+					if (nodePos == currentNode.Label().length())
+					{
+						// add the data for the new string to the current node
+						currentNode.Value().addData(sentencePos, startFrom);
 
+						// update the previous node before moving to the next node
+						previousNode = currentNode.Value();
+
+						// look for a child node starting with the next char in the pattern
+						currentNode = currentNode.Value().getChild(inputRemaining.substring(addPos));
+
+						// if no child was found, add the rest of the input as a child of the previous node
+						if (currentNode == null)
+						{
+							previousNode.addChild(inputRemaining.substring(addPos), sentencePos, startFrom + addPos);
+							break;
+						}
+
+						// reset our position in the node back to the start for the new node
+						nodePos = 0;
+					}
+					// if there is a mismatch, then split the current node in half,
+					// then add the rest of the input and second half as a child of the first half
+					else if (inputRemaining.charAt(addPos) != currentNode.Label().charAt(nodePos))
+					{
+						// split the label of the current node in two
+						String firstHalfLabel = currentNode.Label().substring(0, nodePos);
+						String secondHalfLabel = currentNode.Label().substring(nodePos);
+
+						// create a new node to act as the first part
+						SuffixTrieNode firstHalfNode = new SuffixTrieNode(currentNode.Value().data);
+
+						// add the data for the new string to the first part
+						firstHalfNode.addData(sentencePos, startFrom);
+
+						// add the current node as a child of the first part
+						firstHalfNode.replaceNode("", secondHalfLabel, currentNode.Value());
+
+						// create a new node for the remainder of the input and add it as a child of the first part
+						firstHalfNode.addChild(inputRemaining.substring(addPos), sentencePos, startFrom);
+
+						// remove the current node from the previous node, and add the first part as a new child
+						previousNode.replaceNode(currentNode.Label(), firstHalfLabel, firstHalfNode);
+
+						break;
+					}
+
+					// advance forward one position in the current node
+					// this being at the end means that new nodes will always start at position 1, since we know 0 has to match since that's how we found the node
+					nodePos++;
+				}
+			}
 		}
-
-		// set the current (last added/accessed) node to be terminal
-		//currentNode.setTerminal(true);
-
-		return;
 	}
 
 	/**
 	 * Get the suffix trie node associated with the given (sub)string.
 	 *
-	 * @param str the (sub)string to search for
-	 * @return the final node in the (sub)string
+	 * @param pattern the (sub)string to search for.
+	 * @return a SuffixTrieChild object containing the final node in the (sub)string, and the label of that node.
 	 */
-	public SuffixTrieNode get(String str)
+	public SuffixTrieChild getChild(String pattern)
 	{
-		// ensure pattern is case insensitive
-		str = str.toLowerCase();
+		// ensure pattern is case-insensitive and has no leading or trailing whitespace
+		pattern = CleanString(pattern);
 
-		char[] chars = str.toCharArray();
-		SuffixTrieNode currentNode = root;
+		SuffixTrieChild currentNode = new SuffixTrieChild("", root);
 
-		for(char c : chars)
+		// store the position within the current node to compare to
+		int nodePos = 0;
+
+		// search through the tree following the pattern
+		for (int patternPos = 0; patternPos < pattern.length(); patternPos++)
 		{
-			if (currentNode.getChild(c) != null)
+			// if the current node has been full searched, try and find a continuation in a child node
+			if (nodePos == currentNode.Label().length())
 			{
-				// search through the tree as long as the current string already exists
-				currentNode = currentNode.getChild(c);
+				// look for a child node starting with the next char in the pattern
+				currentNode = currentNode.Value().getChild(pattern.substring(patternPos));
+
+				// if no child was found, the string is not present
+				if (currentNode == null)
+				{
+					return null;
+				}
+
+				// reset our position in the node back to the start for the new node
+				nodePos = 0;
 			}
-			else
+			// if there is a mismatch, then the string is not present
+			else if (pattern.charAt(patternPos) != currentNode.Label().charAt(nodePos))
 			{
-				// when a missing char is found, the string doesn't exist, so return null
 				return null;
 			}
+
+			// advance forward one position in the current node
+			// this being at the end means that new nodes will always start at position 1, since we know 0 has to match since that's how we found the node
+			nodePos++;
 		}
 
+		// if the whole pattern has been found, return the current node we're looking at
 		return currentNode;
+	}
+
+	/**
+	 * Get the suffix trie node associated with the given (sub)string.
+	 *
+	 * @param pattern the (sub)string to search for.
+	 * @return the final node in the (sub)string.
+	 */
+	public SuffixTrieNode get(String pattern)
+	{
+		return getChild(pattern).Value();
 	}
 
 	/**
@@ -105,8 +164,7 @@ public class SuffixTrie
 	 * It is called in the following way
 	 * <code>SuffixTrie st = SuffixTrie.readInFromFile("Frank01e.txt");</code>
 	 *
-	 * @param fileName
-	 * @return
+	 * @param fileName The name of the file within the 'SuffixTrie/data/' folder to import.
 	 */
 	public static SuffixTrie readInFromFile(String fileName)
 	{
@@ -164,5 +222,24 @@ public class SuffixTrie
 
 		System.out.println("Read in " + sentanceCounter + " sentences containing " + wordCounter + " words in " + ((System.nanoTime() - startTime) / 1000000.0) + " ms.");
 		return trie;
+	}
+
+	/**
+	 * Helper method to remove whitespace and convert string to lowercase.
+	 *
+	 * @param str The string to clean.
+	 * @return The input string converted to lowercase with all leading and trailing whitespace removed.
+	 */
+	private String CleanString(String str)
+	{
+		// to prevent @NotNull methods from causing problems, return null strings immediately.
+		if (str == null)
+		{
+			return null;
+		}
+
+		str = str.trim();
+		str = str.toLowerCase();
+		return str;
 	}
 }

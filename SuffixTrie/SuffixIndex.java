@@ -1,8 +1,8 @@
 public class SuffixIndex
 {
 
-	int sentence;
-	int character;
+	private int sentence;
+	private int character;
 
 	public SuffixIndex(int sentence, int character)
 	{
