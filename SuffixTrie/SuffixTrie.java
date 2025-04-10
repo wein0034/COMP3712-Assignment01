@@ -1,5 +1,6 @@
 import java.io.*;
-import java.util.Scanner;
+import java.text.BreakIterator;
+import java.util.*;
 
 public class SuffixTrie
 {
@@ -174,7 +175,6 @@ public class SuffixTrie
 		{
 			// use a FileInputStream to ensure correct reading end-of-file
 			scanner = new Scanner(new FileInputStream("SuffixTrie" + File.separator + "data" + File.separator + fileName));
-			//scanner = new Scanner(new BufferedReader(new FileReader("SuffixTrie/data/" + fileName)));
 		}
 		catch (FileNotFoundException ex)
 		{
@@ -186,37 +186,39 @@ public class SuffixTrie
 		int wordCounter = 0;
 
 		long startTime = System.nanoTime();
+
+		// create a blank string which will be used to "scroll" through the file
+		String currentText = "";
+
+		// define where to end sentences using BreakIterator
+		BreakIterator iterator = BreakIterator.getSentenceInstance(Locale.US);
+
+		// begin scanning, keep going until the file has been fully read
 		while (scanner.hasNext())
 		{
-			StringBuilder sentence = new StringBuilder();
+			// grab the next line from the file and add it to the current text
+			currentText += scanner.nextLine() + " ";
+			iterator.setText(currentText);
 
-			// Load the next sentence (read until the next '.')
-			while (scanner.hasNext())
+			// read all the sentences from the current text into a list
+			List<String> sentences = new ArrayList<>();
+			int start = iterator.first();
+			for (int end = iterator.next(); end != BreakIterator.DONE; start = end, end = iterator.next())
 			{
-				sentence.append(scanner.next());    // Scan until the next whitespace
-				sentence.append(" ");   // Add the whitespace back in that is removed by next()
-				// Once a full stop is found as the last character, the sentence is complete
-				char end = sentence.charAt(sentence.length() - 2);
-				if ((end == '.') || (end == '!') || (end == '?'))
-				{
-					// TODO fix sentence detection. perhaps using "BreakIterator.getSentenceInstance(Locale.US)"?
-					break;
-				}
+				sentences.add(currentText.substring(start, end));
 			}
-			//System.out.println("Reading: " + sentence); // uncomment if you want to see what is read in
 
-			trie.insert(String.valueOf(sentence), sentenceCounter);
+			// add all the sentences read so far into the trie
+			// the last sentence in the list is ONLY added to the tree if there is nothing else to read from the file
+			for (int sentencePos = 0; sentencePos < sentences.size() - (scanner.hasNext() ? 1 : 0); sentencePos++)
+			{
+				// insert the extracted sentence into the trie
+				trie.insert(sentences.get(sentencePos), sentenceCounter);
+				sentenceCounter++;
 
-//			// Split all the words in the sentence into an array (deliminate with " ")
-//			String[] words = sentence.toString().split(" ");
-//
-//			// Add each word to the trie
-//			for (String word : words)
-//			{
-//				trie.insert(word, sentenceCounter);
-//				wordCounter++;
-//			}
-			sentenceCounter++;
+				// remove the extracted sentence from the read text
+				currentText = currentText.substring(sentences.get(sentencePos).length());
+			}
 		}
 
 		System.out.println("Read in " + sentenceCounter + " sentences containing " + wordCounter + " words in " + ((System.nanoTime() - startTime) / 1000000.0) + " ms.");
